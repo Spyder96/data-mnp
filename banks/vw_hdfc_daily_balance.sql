@@ -1,21 +1,22 @@
-CREATE View vw_au_bank_balance as
+CREATE View vw_hdfc_bank_balance as
 
 with recursive cte as 
 (
 SELECT
 	dt.date
-,
-	ab.Balance
-	--,COALESCE (ab.Balance,0) as au_balance
+	,b.Debit
+	,b.Credit
+	,b.Balance
+	
 ,
 	ROW_NUMBER() over(
 ORDER by
 	dt.Date) as rn
 from
 	date_table dt
-left join au_bank ab 
+left join hdfc_bank b 
 	on
-	dt.Date = ab.Date
+	dt.Date = b.Date
 where
 	dt.Date < DATE('now')
 order BY
@@ -25,10 +26,10 @@ recursivefill as
 (
 select
 		date
-		,
-	Balance
-		,
-	rn
+		,Debit
+		,Credit
+		,Balance
+		,rn
 from
 	cte
 where 
@@ -36,6 +37,8 @@ where
 UNION ALL
 SELECT
 	c.Date,
+	c.Debit,
+	c.Credit,
 	COALESCE(c.Balance,
 	rf.Balance),
 	c.rn
@@ -49,7 +52,8 @@ JOIN
 
 select 
 	date 
-	,
-	COALESCE (balance,	0) as au_balance
+	, COALESCE ( Debit ,0) as Debit
+	, COALESCE ( Credit ,0) as Credit
+	,COALESCE (balance,	0) as sbi_balance
 from
 	recursivefill ;
