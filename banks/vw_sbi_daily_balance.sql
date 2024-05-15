@@ -1,4 +1,4 @@
-CREATE View vw_au_bank_balance as
+CREATE View vw_sbi_bank_balance as
 
 with recursive cte as 
 (
@@ -14,7 +14,7 @@ ORDER by
 	dt.Date) as rn
 from
 	date_table dt
-left join au_bank b 
+left join sbi_bank b 
 	on
 	dt.Date = b.Date
 where
