@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+DROP VIEW vw_sbi_bank_balance;
+
+>>>>>>> pandas
 CREATE View vw_sbi_bank_balance as
 
 with recursive cte as 

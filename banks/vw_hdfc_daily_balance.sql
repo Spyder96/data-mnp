@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+DROP VIEW vw_hdfc_bank_balance;
+>>>>>>> pandas
 CREATE View vw_hdfc_bank_balance as
 
 with recursive cte as 
@@ -54,6 +58,10 @@ select
 	date 
 	, COALESCE ( Debit ,0) as Debit
 	, COALESCE ( Credit ,0) as Credit
+<<<<<<< HEAD
 	,COALESCE (balance,	0) as sbi_balance
+=======
+	,COALESCE (balance,	0) as hdfc_balance
+>>>>>>> pandas
 from
 	recursivefill ;
