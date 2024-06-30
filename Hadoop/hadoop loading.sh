@@ -131,7 +131,59 @@ select o.ordernumber, o.orderdate, od.productcode, od.quantityordered, od.priceE
 count_query="select count(*) from ordersummary;"
 hive -e "$hive_conf $drop_table $create_table_sql $insert_data $count_query"
 
+### Task 3a
+hive_conf="set hive.exec.dynamic.partition.mode=nonstrict;SET hive.exec.max.dynamic.partitions=100000;SET hive.exec.max.dynamic.partitions.pernode=100000;"
+drop_table="drop table if exists ordersummary_by_customers;"
 
+create_table_sql_formatted="create table ordersummary_by_customers (
+ orderNumber int, 
+ orderdate date,
+ shippeddate date,
+ customerNumber int
+,customerName string 
+, Status 	string
+, OrderAmount	decimal(10,2)
+) 
+  partitioned by (orderYear int, orderMonth int)
+  stored as parquet;"
+
+
+insert_data_formatted="insert into ordersummary_by_customers 
+	partition(orderYear, orderMonth)
+select o.ordernumber
+	, o.orderdate
+	, o.ShippedDate
+	, o.customerNumber
+	, cx.CustomerName
+	, o.Status
+	, sum(od.quantityordered * od.priceeach) as OrderAmount
+	, year(orderDate) as OrderYear 
+	, month(orderDate) as OrderMonth
+	
+from orders o 
+	join orderdetails od on (o.ordernumber = od.ordernumber)
+	join customers cx on 	(o.customerNumber = cx.customerNumber)
+	
+group by 
+	o.ordernumber
+	, o.orderdate
+	, o.ShippedDate
+	, o.customerNumber
+	, cx.CustomerName
+	, o.Status
+	, year(orderDate) 
+	, month(orderDate)
+;
+"
+
+
+
+
+count_query="select count(*) from ordersummary_by_customers;"
+
+hive -e "$hive_conf $drop_table $create_table_sql_formatted $insert_data_formatted $count_query"
+
+## task 3b
 hive_conf="set hive.exec.dynamic.partition.mode=nonstrict;SET hive.exec.max.dynamic.partitions=100000;SET hive.exec.max.dynamic.partitions.pernode=100000;"
 drop_table="drop table if exists ordersummary_by_products;"
 
