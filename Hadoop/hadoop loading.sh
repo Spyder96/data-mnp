@@ -98,3 +98,35 @@ hive -e "CREATE TABLE  products ( productCode string, productName string, produc
 hive -e "DROP TABLE IF EXISTS productlines;"
 hive -e "CREATE TABLE  productlines ( productLine string, textDescription string, htmlDescription string, image string ) row format delimited fields terminated by ',' stored as textfile location '/home/labuser/database/classicmodels/productlines';"
 
+#verifying table record counts
+for table in $tablelist;  
+do 
+  echo -e "\t\tTable name = $table\n\n"
+  hive_output=$(hive -e "SELECT COUNT(*) AS count FROM $table;" 2>&1| tail -5)
+  
+  echo -e "Output for table $table:\n$hive_output"
+  echo "****************************************"
+done
+
+
+######## Partioning
+hive_conf="set hive.exec.dynamic.partition.mode=nonstrict;"
+drop_table="drop table if exists ordersummary;"
+create_table_sql="create table ordersummary (
+ orderNumber int, 
+ orderdate date,
+ productCode string, 
+ quantityOrdered int, 
+ priceEach decimal(10,2), 
+ amount decimal(10,2),    
+ customerNumber int
+) partitioned by (orderYear int, orderMonth int)
+  stored as parquet;"
+
+
+insert_data="insert into ordersummary 
+partition(orderYear, orderMonth)
+select o.ordernumber, o.orderdate, od.productcode, od.quantityordered, od.priceEach, (od.quantityordered * od.priceeach) as amount, o.customerNumber, year(orderDate), month(orderDate) from orders o join orderdetails od on (o.ordernumber = od.ordernumber);"
+
+count_query="select count(*) from ordersummary;"
+hive -e "$hive_conf $drop_table $create_table_sql $insert_data $count_query"
